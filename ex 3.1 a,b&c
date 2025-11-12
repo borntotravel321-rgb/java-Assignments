@@ -1,0 +1,176 @@
+part a
+
+#login.html
+<!DOCTYPE html>
+<html>
+<body>
+<h2>User Login</h2>
+<form action="LoginServlet" method="POST">
+    Username: <input type="text" name="username"><br><br>
+    Password: <input type="password" name="password"><br><br>
+    <input type="submit" value="Login">
+</form>
+</body>
+</html>
+
+
+#LoginServlet.java
+import java.io.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+
+public class LoginServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String user = request.getParameter("username");
+        String pass = request.getParameter("password");
+
+        if(user.equals("admin") && pass.equals("1234")) {
+            out.println("<h2>Welcome, " + user + "Login Successful!</h2>");
+        } else {
+            out.println("<h2>Invalid Username or Password</h2>");
+        }
+    }
+}
+
+#web.xml Mapping
+<servlet>
+    <servlet-name>LoginServlet</servlet-name>
+    <servlet-class>LoginServlet</servlet-class>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>LoginServlet</servlet-name>
+    <url-pattern>/LoginServlet</url-pattern>
+</servlet-mapping>
+
+
+part b
+
+
+Course.java
+public class Course {
+    public void courseName() {
+        System.out.println("Course: Computer Science Engineering");
+    }
+}
+
+2️⃣ Student.java
+public class Student {
+    private Course course;
+
+    public Student(Course course) {
+        this.course = course;
+    }
+
+    public void studentInfo() {
+        System.out.println("Student is enrolled in the following course:");
+        course.courseName();
+    }
+}
+
+3️⃣ AppConfig.java (Java-based Spring Config)
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public Course course() {
+        return new Course();
+    }
+
+    @Bean
+    public Student student() {
+        return new Student(course());
+    }
+}
+
+4️⃣ MainApp.java
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class MainApp {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        Student student = context.getBean(Student.class);
+        student.studentInfo();
+    }
+}
+
+part c 
+Create Attendance Table
+CREATE TABLE Attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    date VARCHAR(20),
+    status VARCHAR(20)
+);
+
+2️⃣ attendance.jsp
+<html>
+<body>
+<h2>Student Attendance Form</h2>
+<form action="AttendanceServlet" method="POST">
+    Student ID: <input type="number" name="studentId"><br><br>
+    Date: <input type="date" name="date"><br><br>
+
+    Status:
+    <select name="status">
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+    </select><br><br>
+
+    <input type="submit" value="Submit Attendance">
+</form>
+</body>
+</html>
+
+3️⃣ AttendanceServlet.java
+import java.io.*;
+import java.sql.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+
+public class AttendanceServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        int studentId = Integer.parseInt(request.getParameter("studentId"));
+        String date = request.getParameter("date");
+        String status = request.getParameter("status");
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/company", "root", "YOUR_PASSWORD");
+
+            PreparedStatement ps = con.prepareStatement("INSERT INTO Attendance(student_id, date, status) VALUES(?,?,?)");
+            ps.setInt(1, studentId);
+            ps.setString(2, date);
+            ps.setString(3, status);
+            ps.executeUpdate();
+
+            out.println("<h3>✅ Attendance Recorded Successfully!</h3>");
+            out.println("<a href='attendance.jsp'>Add More</a>");
+
+            con.close();
+        } catch (Exception e) {
+            out.println(e);
+        }
+    }
+}
+
+4️⃣ web.xml Mapping
+<servlet>
+    <servlet-name>AttendanceServlet</servlet-name>
+    <servlet-class>AttendanceServlet</servlet-class>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>AttendanceServlet</servlet-name>
+    <url-pattern>/AttendanceServlet</url-pattern>
+</servlet-mapping>
